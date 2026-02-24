@@ -47,6 +47,7 @@ interface AppProps {
   initialOrg?: Org;
   projectPath: string;
   preloadCommits?: string[];
+  appVersion: string;
 }
 
 type Panel = Exclude<PanelType, 'actions'>;
@@ -98,7 +99,7 @@ const OBJECT_RELATED_TYPES = new Set([
 ]);
 
 // eslint-disable-next-line complexity
-const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits }) => {
+const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appVersion }) => {
   const { exit } = useApp();
   const { stdout } = useStdout();
   const initialUsername = initialOrg?.getUsername() ?? undefined;
@@ -1168,7 +1169,7 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits }) =>
   if ([orgError, metadataError].some(Boolean)) {
     return (
       <Box flexDirection="column">
-        <Header title="SF Metadata Explorer" orgName={orgName} />
+        <Header title="SF Metadata Explorer" orgName={orgName} version={appVersion} />
         <Box padding={1}>
           <Text color="red">Failed to load metadata.</Text>
         </Box>
@@ -1182,7 +1183,7 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits }) =>
 
   return (
     <Box flexDirection="column" width="100%" height={terminalHeight}>
-      <Header title="SF Metadata Explorer" orgName={orgName} />
+      <Header title="SF Metadata Explorer" orgName={orgName} version={appVersion} />
 
       <Box flexDirection="column" height={contentHeight}>
         {behindInfo && (

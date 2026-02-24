@@ -23,13 +23,13 @@ interface HeaderProps {
   version?: string;
 }
 
-export const Header: React.FC<HeaderProps> = ({ title, orgName, version = '0.1.0' }) => (
+export const Header: React.FC<HeaderProps> = ({ title, orgName, version }) => (
   <Box borderStyle="double" borderColor="blue" paddingX={1} justifyContent="space-between">
     <Box>
       <Text bold color="cyan">
         {title}
       </Text>
-      <Text color="gray"> v{version}</Text>
+      {version ? <Text color="gray"> v{version}</Text> : null}
     </Box>
     <Text>
       Org:{' '}

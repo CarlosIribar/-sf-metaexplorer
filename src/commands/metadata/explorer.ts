@@ -14,12 +14,16 @@
  * limitations under the License.
  */
 
-import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
+import { createRequire } from 'node:module';
 import { Args } from '@oclif/core';
 import { Messages } from '@salesforce/core';
+import { SfCommand, Flags } from '@salesforce/sf-plugins-core';
 import React from 'react';
 import { render } from 'ink';
 import App from '../../components/App.js';
+
+const require = createRequire(import.meta.url);
+const packageJson = require('../../../package.json') as { version?: string };
 
 // Enable mouse tracking in terminal
 const enableMouseTracking = (): void => {
@@ -68,6 +72,7 @@ export default class MetadataExplorer extends SfCommand<void> {
   public async run(): Promise<void> {
     const { flags, args } = await this.parse(MetadataExplorer);
     const projectPath = process.cwd();
+    const appVersion = packageJson.version ?? 'unknown';
     const rawArgs = this.argv;
     const hasPreloadFlag = rawArgs.includes('-p') || rawArgs.includes('--preload');
     const preloadCommits = hasPreloadFlag
@@ -82,6 +87,7 @@ export default class MetadataExplorer extends SfCommand<void> {
           initialOrg: flags['target-org'],
           projectPath,
           preloadCommits,
+          appVersion,
         }),
         { patchConsole: true }
       );
