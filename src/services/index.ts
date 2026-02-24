@@ -13,3 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+export { MetadataService } from './MetadataService.js';
+export { OrgService, orgService } from './OrgService.js';
+export { SyncStateService, type SyncState } from './SyncStateService.js';
+export { GitService, type GitBehindInfo } from './GitService.js';

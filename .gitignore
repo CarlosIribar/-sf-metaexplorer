@@ -1,79 +1,55 @@
 # -- CLEAN
+lib/
 tmp/
-# use yarn by default, so ignore npm
-package-lock.json
-
-# never checkin npm config
-.npmrc
-
-# debug logs
-npm-error.log
-yarn-error.log
-
-
-# compile source
-lib
-
-# test artifacts
-*xunit.xml
-*checkstyle.xml
-*unitcoverage
-.nyc_output
-coverage
-test_session*
-
-# generated docs
-docs
-
-# ignore sfdx-trust files
-*.tgz
-*.sig
-package.json.bak.
-
-
+coverage/
+.nyc_output/
 npm-shrinkwrap.json
 oclif.manifest.json
 oclif.lock
 
-# -- CLEAN ALL
-*.tsbuildinfo
-.eslintcache
-.wireit
-node_modules
-
-# --
-# put files here you don't want cleaned with sf-clean
-
-# os specific files
-.DS_Store
-.idea
-
-# Dependencies
+# -- CLEAN-ALL
 node_modules/
+.wireit/
+.eslintcache
+*.tsbuildinfo
 
-# Build output
-lib/
+# Build and packaging artifacts
 dist/
 
-# IDE
-.vscode/
-*.swp
-*.swo
+# Test and coverage output
+coverage/
+.nyc_output/
+*xunit.xml
+*checkstyle.xml
+*unitcoverage
+test_session*
 
-# OS
-Thumbs.db
+# Local plugin state
+.sf-metaexplorer/
+
+# Environment and local config
+.env
+.env.local
+.npmrc
 
 # Logs
 *.log
 npm-debug.log*
+npm-error.log
+yarn-error.log
 
-# Test coverage
-coverage/
-.nyc_output/
+# Package/signing output
+*.tgz
+*.sig
+package.json.bak.
 
-# Plugin state (local)
-.sf-metaexplorer/
+# Editor and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Environment
-.env
-.env.local
+# Internal planning notes
+IA/

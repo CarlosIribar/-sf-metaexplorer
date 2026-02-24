@@ -14,4 +14,30 @@
  * limitations under the License.
  */
 
-export { default as App } from './App.js';
+import React from 'react';
+import { Box, Text } from 'ink';
+
+interface HeaderProps {
+  title: string;
+  orgName: string;
+  version?: string;
+}
+
+export const Header: React.FC<HeaderProps> = ({ title, orgName, version = '0.1.0' }) => (
+  <Box borderStyle="double" borderColor="blue" paddingX={1} justifyContent="space-between">
+    <Box>
+      <Text bold color="cyan">
+        {title}
+      </Text>
+      <Text color="gray"> v{version}</Text>
+    </Box>
+    <Text>
+      Org:{' '}
+      <Text color="green" bold>
+        {orgName}
+      </Text>
+    </Text>
+  </Box>
+);
+
+export default Header;

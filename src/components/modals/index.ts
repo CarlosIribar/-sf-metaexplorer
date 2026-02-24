@@ -14,4 +14,9 @@
  * limitations under the License.
  */
 
-export { default as App } from './App.js';
+export { ConfirmActionModal } from './ConfirmActionModal.js';
+export { HelpModal } from './HelpModal.js';
+export { ManageTypesModal } from './ManageTypesModal.js';
+export { OrgSelectorModal } from './OrgSelectorModal.js';
+export { ProgressModal } from './ProgressModal.js';
+export { ResultModal } from './ResultModal.js';

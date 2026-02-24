@@ -14,4 +14,22 @@
  * limitations under the License.
  */
 
-export { default as App } from './App.js';
+import React from 'react';
+import { Box, Text } from 'ink';
+import InkSpinner from 'ink-spinner';
+
+interface LoadingProps {
+  message?: string;
+  type?: 'dots' | 'line' | 'arc' | 'arrow';
+}
+
+export const Loading: React.FC<LoadingProps> = ({ message = 'Loading...', type = 'dots' }) => (
+  <Box>
+    <Text color="green">
+      <InkSpinner type={type} />
+    </Text>
+    <Text> {message}</Text>
+  </Box>
+);
+
+export default Loading;

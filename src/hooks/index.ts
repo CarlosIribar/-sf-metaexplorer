@@ -13,3 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+export { useMetadata } from './useMetadata.js';
+export { useMouseInput } from './useMouseInput.js';
+export { useOrgs } from './useOrgs.js';
+export { useSelection } from './useSelection.js';
+export { useSyncState } from './useSyncState.js';

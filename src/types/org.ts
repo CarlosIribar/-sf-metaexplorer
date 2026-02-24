@@ -14,4 +14,12 @@
  * limitations under the License.
  */
 
-export { default as App } from './App.js';
+export interface OrgInfo {
+  username: string;
+  alias?: string;
+  orgId: string;
+  instanceUrl: string;
+  isDefault: boolean;
+  isScratch: boolean;
+  isDevHub: boolean;
+}

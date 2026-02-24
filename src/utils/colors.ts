@@ -14,4 +14,25 @@
  * limitations under the License.
  */
 
-export { default as App } from './App.js';
+import { MetadataStatus } from '../types/index.js';
+
+export const STATUS_COLORS: Record<MetadataStatus, string> = {
+  'local-only': 'green',
+  'remote-only': 'cyan',
+  synced: 'white',
+  conflict: 'yellow',
+};
+
+export const STATUS_ICONS: Record<MetadataStatus, string> = {
+  'local-only': '^',
+  'remote-only': 'v',
+  synced: '=',
+  conflict: '!',
+};
+
+export const STATUS_LABELS: Record<MetadataStatus, string> = {
+  'local-only': 'Local Only',
+  'remote-only': 'Remote Only',
+  synced: 'Synced',
+  conflict: 'Conflict',
+};

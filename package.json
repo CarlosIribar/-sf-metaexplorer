@@ -1,14 +1,15 @@
 {
-  "name": "@salesforce/plugin-template-sf",
-  "description": "A template repository for sf plugins",
-  "version": "1.1.76",
-  "author": "Salesforce",
-  "bugs": "https://github.com/forcedotcom/cli/issues",
+  "name": "sf-metaexplorer",
+  "description": "Interactive Salesforce CLI plugin to browse, compare, retrieve, and deploy metadata",
+  "version": "0.1.0",
+  "author": "Carlos Iribar",
+  "bugs": "https://github.com/carlosiribar/sf-metaexplorer/issues",
   "dependencies": {
     "@oclif/core": "^4",
     "@salesforce/core": "^8.24.0",
     "@salesforce/kit": "^3.2.4",
     "@salesforce/sf-plugins-core": "^12",
+    "@salesforce/source-deploy-retrieve": "^12.0.1",
     "ink": "^5.2.1",
     "ink-select-input": "^6.2.0",
     "ink-spinner": "^5.0.0",
@@ -16,15 +17,21 @@
     "react": "^18.3.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
     "@oclif/plugin-command-snapshot": "^5.3.8",
     "@salesforce/cli-plugins-testkit": "^5.3.41",
     "@salesforce/dev-scripts": "^11.0.4",
     "@salesforce/plugin-command-reference": "^3.1.79",
     "@types/react": "^18.3.28",
+    "@types/react-test-renderer": "^18.3.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-sf-plugin": "^1.20.33",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.7",
     "oclif": "^4.22.59",
+    "react-test-renderer": "^18.3.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4"
   },
@@ -34,12 +41,11 @@
   "files": [
     "/lib",
     "/messages",
-    "/npm-shrinkwrap.json",
     "/oclif.lock",
     "/oclif.manifest.json",
     "/schemas"
   ],
-  "homepage": "https://github.com/salesforcecli/plugin-template-sf",
+  "homepage": "https://github.com/carlosiribar/sf-metaexplorer",
   "keywords": [
     "force",
     "salesforce",
@@ -60,26 +66,31 @@
       "@salesforce/plugin-command-reference"
     ],
     "topics": {
-      "hello": {
-        "description": "Commands to say hello."
+      "metadata": {
+        "description": "Commands for metadata exploration."
       }
     },
     "flexibleTaxonomy": true
   },
-  "repository": "salesforcecli/plugin-template-sf",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/carlosiribar/sf-metaexplorer.git"
+  },
   "scripts": {
     "build": "wireit",
     "clean": "sf-clean",
     "clean-all": "sf-clean all",
+    "commitlint": "commitlint",
     "compile": "wireit",
     "docs": "sf-docs",
     "fix-license": "eslint src test --fix --rule \"header/header: [2]\"",
     "format": "wireit",
     "link-check": "wireit",
     "lint": "wireit",
+    "lint-staged": "lint-staged",
     "postpack": "sf-clean --ignore-signing-artifacts",
-    "prepack": "sf-prepack",
-    "prepare": "sf-install",
+    "prepack": "npm run clean && tsc -p . --pretty && oclif manifest",
+    "prepare": "husky install",
     "test": "wireit",
     "test:nuts": "nyc mocha \"**/*.nut.ts\" --slow 4500 --timeout 600000 --parallel",
     "test:only": "wireit",
@@ -99,6 +110,7 @@
       "command": "tsc -p . --pretty --incremental",
       "files": [
         "src/**/*.ts",
+        "src/**/*.tsx",
         "**/tsconfig.json",
         "messages/**"
       ],
@@ -112,6 +124,7 @@
       "command": "prettier --write \"+(src|test|schemas)/**/*.+(ts|js|json)|command-snapshot.json\"",
       "files": [
         "src/**/*.ts",
+        "src/**/*.tsx",
         "test/**/*.ts",
         "schemas/**/*.json",
         "command-snapshot.json",
@@ -123,6 +136,7 @@
       "command": "eslint src test --color --cache --cache-location .eslintcache",
       "files": [
         "src/**/*.ts",
+        "src/**/*.tsx",
         "test/**/*.ts",
         "messages/**",
         "**/.eslint*",
@@ -178,7 +192,8 @@
     "test:deprecation-policy": {
       "command": "node --loader ts-node/esm --no-warnings=ExperimentalWarning \"./bin/dev.js\" snapshot:compare",
       "files": [
-        "src/**/*.ts"
+        "src/**/*.ts",
+        "src/**/*.tsx"
       ],
       "output": [],
       "dependencies": [
@@ -189,6 +204,7 @@
       "command": "node --loader ts-node/esm --no-warnings=ExperimentalWarning \"./bin/dev.js\" schema:compare",
       "files": [
         "src/**/*.ts",
+        "src/**/*.tsx",
         "schemas"
       ],
       "output": []

@@ -1,3 +1,3 @@
 module.exports = {
-  '**/*.{js,json,md}?(x)': () => 'npm run reformat'
+  '**/*.{js,ts,tsx,json,md,yml,yaml}': ['prettier --write']
 };
