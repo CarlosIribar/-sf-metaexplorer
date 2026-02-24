@@ -1,6 +1,6 @@
 [
   {
-    "alias": [],
+    "alias": ["explorer"],
     "command": "metadata:explorer",
     "flagAliases": [],
     "flagChars": ["o", "p"],

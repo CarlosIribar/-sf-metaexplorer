@@ -45,6 +45,7 @@ export default class MetadataExplorer extends SfCommand<void> {
   public static readonly summary = messages.getMessage('summary');
   public static readonly description = messages.getMessage('description');
   public static readonly examples = messages.getMessages('examples');
+  public static readonly aliases = ['explorer'];
 
   public static readonly flags = {
     'target-org': Flags.optionalOrg({

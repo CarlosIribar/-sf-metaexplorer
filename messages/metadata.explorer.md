@@ -1,23 +1,25 @@
 # summary
 
-Interactive TUI for managing Salesforce metadata.
+Open an interactive metadata explorer in your terminal.
 
 # description
 
-Browse, retrieve, and deploy metadata using an interactive terminal interface.
-This tool provides a visual way to manage your Salesforce metadata without
-remembering complex CLI commands.
+Use a terminal UI to browse metadata by type, compare local and remote state,
+and run retrieve or deploy actions for selected components.
+
+You can run the command as `sf metadata explorer` or the short alias `sf explorer`.
 
 # examples
 
 - `sf metadata explorer`
-- `sf metadata explorer --target-org myOrg`
-- `sf metadata explorer -p <commit1> <commit2>`
+- `sf explorer`
+- `sf explorer --target-org myOrg`
+- `sf explorer -p a1b2c3d -p d4e5f6a`
 
 # flags.target-org.summary
 
-Org to connect to (uses default if not specified).
+Username or alias of the org to use.
 
 # flags.preload.summary
 
-Preload selection from one or more git commit hashes.
+Preload selected components from one or more git commit hashes.

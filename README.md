@@ -44,6 +44,12 @@ Start the UI:
 sf metadata explorer
 ```
 
+Short alias:
+
+```bash
+sf explorer
+```
+
 Use a specific org:
 
 ```bash
