@@ -33,6 +33,6 @@ export const STATUS_ICONS: Record<MetadataStatus, string> = {
 export const STATUS_LABELS: Record<MetadataStatus, string> = {
   'local-only': 'Local Only',
   'remote-only': 'Remote Only',
-  synced: 'Synced',
+  synced: 'Local + Remote',
   conflict: 'Conflict',
 };

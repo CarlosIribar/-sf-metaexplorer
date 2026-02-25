@@ -67,8 +67,9 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
   const visibleNodes = flattenNodes(nodes);
 
-  // Virtual scrolling
-  const windowSize = Math.max(3, height - 1);
+  // Virtual scrolling (reserve one line for footer when present)
+  const footerLines = visibleNodes.length > 0 ? 1 : 0;
+  const windowSize = Math.max(3, height - footerLines);
 
   const safeCursorIndex = useMemo(
     () => (visibleNodes.length === 0 ? 0 : Math.min(cursorIndex, visibleNodes.length - 1)),
@@ -77,8 +78,8 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
   const scrollOffset = useMemo(() => {
     const maxOffset = Math.max(0, visibleNodes.length - windowSize);
-    const nextOffset = Math.max(0, safeCursorIndex - windowSize + 1);
-    return Math.min(maxOffset, nextOffset);
+    const centeredOffset = safeCursorIndex - Math.floor(windowSize / 2);
+    return Math.min(maxOffset, Math.max(0, centeredOffset));
   }, [visibleNodes.length, safeCursorIndex, windowSize]);
 
   const virtualNodes = useMemo(
@@ -174,7 +175,11 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
     return (
       <Box key={node.id} paddingLeft={1}>
-        <Text color={isSelected && isActive ? 'green' : node.color ?? 'white'} bold={isSelected || isMarked}>
+        <Text
+          wrap="truncate-end"
+          color={isSelected && isActive ? 'green' : node.color ?? 'white'}
+          bold={isSelected || isMarked}
+        >
           {isSelected && isActive ? '>' : ' '} {indent}
           {prefix}
           {checkbox}
@@ -194,7 +199,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
         </Box>
       )}
       {visibleNodes.length > 0 && (
-        <Box paddingX={1} marginTop={1}>
+        <Box paddingX={1}>
           <Text color="gray">
             Showing {scrollOffset + 1}-{Math.min(scrollOffset + windowSize, visibleNodes.length)} of{' '}
             {visibleNodes.length}

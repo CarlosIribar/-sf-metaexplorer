@@ -27,6 +27,7 @@ export type UseSyncStateReturn = {
   clearCache: () => Promise<void>;
   getCachedMetadata: (type: string) => Promise<CachedMetadata | null>;
   setCachedMetadata: (type: string, data: CachedMetadata) => Promise<void>;
+  setCachedMetadataBatch: (cacheByType: Record<string, CachedMetadata>) => Promise<void>;
   setUiState: (data: PersistedUiState) => Promise<void>;
   getSubscriptions: (orgUsername: string) => Promise<string[] | null>;
   setSubscriptions: (orgUsername: string, types: string[]) => Promise<void>;
@@ -75,6 +76,15 @@ export function useSyncState(projectPath: string): UseSyncStateReturn {
     [service]
   );
 
+  const setCachedMetadataBatch = useCallback(
+    async (cacheByType: Record<string, CachedMetadata>): Promise<void> => {
+      await service.setCachedMetadataBatch(cacheByType);
+      const newState = await service.load();
+      setState(newState);
+    },
+    [service]
+  );
+
   const setUiState = useCallback(
     async (data: PersistedUiState): Promise<void> => {
       await service.setUiState(data);
@@ -111,6 +121,7 @@ export function useSyncState(projectPath: string): UseSyncStateReturn {
     clearCache,
     getCachedMetadata,
     setCachedMetadata,
+    setCachedMetadataBatch,
     setUiState,
     getSubscriptions,
     setSubscriptions,

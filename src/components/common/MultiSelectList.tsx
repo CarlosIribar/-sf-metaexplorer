@@ -62,8 +62,8 @@ export const MultiSelectList: React.FC<MultiSelectListProps> = ({
 
   const scrollOffset = useMemo(() => {
     const maxOffset = Math.max(0, items.length - windowSize);
-    const nextOffset = Math.max(0, safeCursorIndex - windowSize + 1);
-    return Math.min(maxOffset, nextOffset);
+    const centeredOffset = safeCursorIndex - Math.floor(windowSize / 2);
+    return Math.min(maxOffset, Math.max(0, centeredOffset));
   }, [items.length, safeCursorIndex, windowSize]);
 
   // Mouse event handling via centralized hook (avoids multiple stdin listeners / setRawMode conflicts)
@@ -143,7 +143,7 @@ export const MultiSelectList: React.FC<MultiSelectListProps> = ({
             <Box key={item.id} paddingX={1}>
               <Text color={isSelected && isActive ? 'green' : 'white'}>{isSelected && isActive ? '>' : ' '} </Text>
               <Text color={item.selected ? 'green' : 'white'}>{checkbox} </Text>
-              <Text color={statusColor}>
+              <Text wrap="truncate-end" color={statusColor}>
                 {statusIcon} {item.label}
               </Text>
               <Text color="gray"> [{statusLabel}]</Text>

@@ -15,7 +15,7 @@
  */
 
 import { Connection, SfProject } from '@salesforce/core';
-import { ComponentSet, MetadataResolver, registry } from '@salesforce/source-deploy-retrieve';
+import { ComponentSet, MetadataResolver, SourceComponent, registry } from '@salesforce/source-deploy-retrieve';
 import { MetadataComponent, MetadataComparison, MetadataProgress, MetadataType } from '../types/index.js';
 
 const SUPPORTED_TYPES: MetadataType[] = [
@@ -155,13 +155,64 @@ export class MetadataService {
   }
 
   private static getPackageName(type: string, fullName: string): string | undefined {
-    if (type === 'CustomObject') {
-      const match = /^([A-Za-z0-9_]+)__.+__c$/.exec(fullName);
-      return match ? match[1] : undefined;
+    if (
+      [
+        'CustomObject',
+        'CustomField',
+        'ValidationRule',
+        'RecordType',
+        'BusinessProcess',
+        'FieldSet',
+        'CompactLayout',
+        'ListView',
+        'WebLink',
+        'SharingReason',
+      ].includes(type)
+    ) {
+      return undefined;
     }
 
     const match = /^([A-Za-z0-9_]+)__/.exec(fullName);
     return match ? match[1] : undefined;
+  }
+
+  private static localComponentKey(component: SourceComponent): string {
+    return `${component.type.name}:${component.fullName}:${component.xml ?? component.content ?? ''}`;
+  }
+
+  private static toLocalMetadataComponent(component: SourceComponent, index: number): MetadataComponent {
+    const type = component.type.name;
+    const packageName = MetadataService.getPackageName(type, component.fullName);
+
+    return {
+      packageName,
+      isThirdParty: packageName !== undefined,
+      id: `local-${type}-${component.fullName}-${index}`,
+      type,
+      fullName: component.fullName,
+      fileName: component.xml ?? component.content,
+      status: 'local-only',
+    };
+  }
+
+  private static collectComponentTree(root: SourceComponent): SourceComponent[] {
+    const stack: SourceComponent[] = [root];
+    const collected: SourceComponent[] = [];
+
+    while (stack.length > 0) {
+      const current = stack.pop();
+      if (!current) {
+        continue;
+      }
+
+      collected.push(current);
+      const children = current.getChildren();
+      if (children.length > 0) {
+        stack.push(...children);
+      }
+    }
+
+    return collected;
   }
 
   public getMetadataTypes(): MetadataType[] {
@@ -211,24 +262,11 @@ export class MetadataService {
 
   public async listLocalComponents(type: string): Promise<MetadataComponent[]> {
     try {
-      const resolver = new MetadataResolver();
-      const packagePaths = await this.getPackagePaths();
-      const components = packagePaths.flatMap((packagePath) => resolver.getComponentsFromPath(packagePath));
+      const components = await this.listAllLocalSourceComponents();
 
       return components
         .filter((component) => component.type.name === type)
-        .map((component, index) => {
-          const packageName = MetadataService.getPackageName(type, component.fullName);
-          return {
-            packageName,
-            isThirdParty: packageName !== undefined,
-            id: `local-${type}-${component.fullName}-${index}`,
-            type,
-            fullName: component.fullName,
-            fileName: component.xml ?? component.content,
-            status: 'local-only',
-          };
-        });
+        .map((component, index) => MetadataService.toLocalMetadataComponent(component, index));
     } catch (error) {
       void error;
       return [];
@@ -241,9 +279,7 @@ export class MetadataService {
     typeNames.forEach((typeName) => buckets.set(typeName, []));
 
     try {
-      const resolver = new MetadataResolver();
-      const packagePaths = await this.getPackagePaths();
-      const components = packagePaths.flatMap((packagePath) => resolver.getComponentsFromPath(packagePath));
+      const components = await this.listAllLocalSourceComponents();
 
       let index = 0;
       for (const component of components) {
@@ -251,16 +287,7 @@ export class MetadataService {
           continue;
         }
 
-        const packageName = MetadataService.getPackageName(component.type.name, component.fullName);
-        const mapped: MetadataComponent = {
-          packageName,
-          isThirdParty: packageName !== undefined,
-          id: `local-${component.type.name}-${component.fullName}-${index}`,
-          type: component.type.name,
-          fullName: component.fullName,
-          fileName: component.xml ?? component.content,
-          status: 'local-only',
-        };
+        const mapped = MetadataService.toLocalMetadataComponent(component, index);
         index += 1;
 
         const current = buckets.get(component.type.name);
@@ -575,6 +602,31 @@ export class MetadataService {
         message: `Deploy error: ${error instanceof Error ? error.message : 'Unknown error'}`,
       };
     }
+  }
+
+  private async listAllLocalSourceComponents(): Promise<SourceComponent[]> {
+    const resolver = new MetadataResolver();
+    const packagePaths = await this.getPackagePaths();
+    const seen = new Set<string>();
+    const all: SourceComponent[] = [];
+
+    for (const packagePath of packagePaths) {
+      const roots = resolver.getComponentsFromPath(packagePath);
+      for (const root of roots) {
+        const tree = MetadataService.collectComponentTree(root);
+        for (const component of tree) {
+          const key = MetadataService.localComponentKey(component);
+          if (seen.has(key)) {
+            continue;
+          }
+
+          seen.add(key);
+          all.push(component);
+        }
+      }
+    }
+
+    return all;
   }
 
   private async getPackagePaths(): Promise<string[]> {

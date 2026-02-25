@@ -98,6 +98,39 @@ const OBJECT_RELATED_TYPES = new Set([
   'SharingReason',
 ]);
 
+const metadataKey = (component: MetadataComponent): string => `${component.type}:${component.fullName}`;
+
+const mergeCachedWithLocalBaseline = (
+  cachedComponents: MetadataComponent[],
+  localComponents: MetadataComponent[]
+): MetadataComponent[] => {
+  const merged = new Map<string, MetadataComponent>();
+
+  for (const component of cachedComponents) {
+    merged.set(metadataKey(component), component);
+  }
+
+  for (const local of localComponents) {
+    const key = metadataKey(local);
+    const existing = merged.get(key);
+    if (!existing) {
+      merged.set(key, local);
+      continue;
+    }
+
+    const hasRemotePresence = ['remote-only', 'synced', 'conflict'].includes(existing.status);
+    const nextStatus = existing.status === 'conflict' ? 'conflict' : hasRemotePresence ? 'synced' : 'local-only';
+    merged.set(key, {
+      ...local,
+      status: nextStatus,
+      lastModifiedBy: existing.lastModifiedBy,
+      lastModifiedDate: existing.lastModifiedDate,
+    });
+  }
+
+  return Array.from(merged.values());
+};
+
 // eslint-disable-next-line complexity
 const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appVersion }) => {
   const { exit } = useApp();
@@ -142,7 +175,7 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
     updateSync,
     isLoading: syncLoading,
     getCachedMetadata,
-    setCachedMetadata,
+    setCachedMetadataBatch,
     setUiState,
     getSubscriptions,
     setSubscriptions,
@@ -178,6 +211,8 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
   const warningHeight = behindInfo ? 1 : 0;
   const bodyHeight = Math.max(8, contentHeight - warningHeight);
   const listHeight = bodyHeight - PANEL_HEADER_HEIGHT - BORDERS;
+  const leftListHeight = Math.max(3, listHeight - 1);
+  const rightListHeight = Math.max(3, listHeight - SEARCH_HEIGHT - 1);
 
   const isLoading = [orgLoading, metadataLoading, syncLoading].some(Boolean);
   const hasModalOpen = [orgModalOpen, manageTypesOpen, confirmAction, progress, result, helpOpen].some(Boolean);
@@ -234,33 +269,18 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
     }
 
     const loadCachedCounts = async (): Promise<void> => {
+      const typeNames = types.map((type) => type.name);
+      const localByType = await getLocalTypeComponents(typeNames);
       const entries = await Promise.all(
         types.map(async (type) => {
-          if (isCacheStale) {
-            return [type.name, []] as const;
-          }
-
-          const cached = await getCachedMetadata(type.name);
-          return [type.name, cached?.components ?? []] as const;
+          const localComponents = localByType[type.name] ?? [];
+          const cachedComponents = isCacheStale ? [] : (await getCachedMetadata(type.name))?.components ?? [];
+          return [type.name, mergeCachedWithLocalBaseline(cachedComponents, localComponents)] as const;
         })
       );
 
       const cachedMap = Object.fromEntries(entries) as Record<string, MetadataComponent[]>;
-      const emptyTypeNames = types
-        .map((type) => type.name)
-        .filter((typeName) => (cachedMap[typeName] ?? []).length === 0);
-
-      let hydratedLocally = false;
-      if (emptyTypeNames.length > 0) {
-        const localByType = await getLocalTypeComponents(emptyTypeNames);
-        for (const typeName of emptyTypeNames) {
-          const localComponents = localByType[typeName] ?? [];
-          if (localComponents.length > 0) {
-            cachedMap[typeName] = localComponents;
-            hydratedLocally = true;
-          }
-        }
-      }
+      const hydratedLocally = Object.values(localByType).some((components) => components.length > 0);
 
       setCachedByType(cachedMap);
       setUsingLocalBaseline(hydratedLocally);
@@ -1085,14 +1105,11 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
       await refresh();
       const typeComponentMap = await getTypeComponents();
       const entries = Object.entries(typeComponentMap);
-      await Promise.all(
-        entries.map(async ([typeName, comps]) =>
-          setCachedMetadata(typeName, {
-            lastFetched: new Date(),
-            components: comps,
-          })
-        )
-      );
+      const now = new Date();
+      const cacheByType = Object.fromEntries(
+        entries.map(([typeName, comps]) => [typeName, { lastFetched: now, components: comps }])
+      ) as Record<string, { lastFetched: Date; components: MetadataComponent[] }>;
+      await setCachedMetadataBatch(cacheByType);
       const cachedMap = Object.fromEntries(entries);
       setCachedByType(cachedMap);
       await updateSync(
@@ -1275,7 +1292,7 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
               >
                 <Text bold>Metadata Types</Text>
               </Box>
-              <Box height={listHeight}>
+              <Box height={leftListHeight}>
                 <TreeView
                   nodes={typeNodes}
                   onSelect={handleTypeSelect}
@@ -1283,7 +1300,7 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
                   onToggleSelect={handleTypeToggle}
                   isActive={activePanel === 'types'}
                   selectedId={selectedNodeId}
-                  height={listHeight}
+                  height={leftListHeight}
                   onFocus={() => setActivePanel('types')}
                 />
               </Box>
@@ -1308,11 +1325,11 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
                 {isGroupingAvailable && <Text color="gray"> {groupByObject ? '[Grouped]' : '[Flat]'}</Text>}
               </Box>
               {metadataLoading ? (
-                <Box padding={1} height={listHeight - SEARCH_HEIGHT}>
+                <Box padding={1} height={rightListHeight}>
                   <Loading message={statusLoadingMessage ?? 'Loading components...'} />
                 </Box>
               ) : (
-                <Box height={listHeight - SEARCH_HEIGHT}>
+                <Box height={rightListHeight}>
                   {isGroupedView && groupedComponents ? (
                     <TreeView
                       nodes={groupedComponents.nodes}
@@ -1320,7 +1337,7 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
                       onToggleExpand={handleToggleExpand}
                       onToggleSelect={handleGroupedToggle}
                       isActive={activePanel === 'components' && !searchActive}
-                      height={listHeight - SEARCH_HEIGHT}
+                      height={rightListHeight}
                       emptyMessage={emptyMessage}
                       onFocus={() => setActivePanel('components')}
                     />
@@ -1330,7 +1347,7 @@ const App: React.FC<AppProps> = ({ initialOrg, projectPath, preloadCommits, appV
                       onToggle={selection.toggle}
                       onToggleAll={handleToggleAll}
                       isActive={activePanel === 'components' && !searchActive}
-                      height={listHeight - SEARCH_HEIGHT}
+                      height={rightListHeight}
                       emptyMessage={emptyMessage}
                       onFocus={() => setActivePanel('components')}
                     />

@@ -92,6 +92,15 @@ export class SyncStateService {
     await this.save(state);
   }
 
+  public async setCachedMetadataBatch(cacheByType: Record<string, CachedMetadata>): Promise<void> {
+    const state = await this.load();
+    state.cache = {
+      ...state.cache,
+      ...cacheByType,
+    };
+    await this.save(state);
+  }
+
   public async clearCache(): Promise<void> {
     const state = await this.load();
     state.cache = {};
